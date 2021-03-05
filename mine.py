@@ -37,6 +37,7 @@ def print_mines_layout():
 
     print()
 
+
 if __name__ == "__main__":
 
     # Size of grid
@@ -45,5 +46,29 @@ if __name__ == "__main__":
     numbers = [[0 for y in range(n)] for x in range(n)]
     # The apparent values of the grid
     mine_values = [[' ' for y in range(n)] for x in range(n)]
+    mine_values[0][8] = 'T'
+    mine_values[0][0] = 'F'
+    mine_values[0][2] = 'I'
+    mine_values[2][1] = 'g'
+    mine_values[2][3] = 'w'
+    mine_values[4][0] = 'G'
+    mine_values[7][1] = 'g'
+    mine_values[8][0] = 'W'
+    mine_values[8][4] = 'I'
+    mine_values[6][8] = 'w'
+    mine_values[2][6] = 'S'
+    mine_values[2][7] = 'S'
+    mine_values[2][8] = 'S'
+    mine_values[3][6] = 'S'
+    mine_values[3][7] = 'S'
+    mine_values[3][8] = 'S'
+    mine_values[4][6] = 'S'
+    mine_values[4][7] = 'S'
+    mine_values[4][8] = 'S'
+    mine_values[5][6] = 'S'
+    mine_values[5][7] = 'S'
+    mine_values[5][8] = 'S'
+        
     print_mines_layout()
+    
     
