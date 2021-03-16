@@ -2,6 +2,10 @@ import random
 import os
 from tabulate import tabulate
 
+import time
+start = time.time()
+
+
 def print_mines_layout():
     global mine_values
     global n
@@ -84,6 +88,9 @@ if mine_values[int(r)][int(col)] == "s":
 mine_values[int(r)][int(col)]= "A"
 
 print_mines_layout()
+
+end = time.time()
+print("Execution time => %s seconds" % (end - start))
 
 """
 
