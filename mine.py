@@ -37,7 +37,7 @@ def print_mines_layout():
 
 if __name__ == "__main__":
     n = 9
-    numbers = [[0 for y in range(n)] for x in range(n)]
+    numbers = [[0 for y in range(0,n)] for x in range(0,n)]
     mine_values = [[' ' for y in range(n)] for x in range(n)]
 
     #mine_values[3][5] = 'A'
@@ -92,14 +92,4 @@ print_mines_layout()
 end = time.time()
 print("Execution time => %s seconds" % (end - start))
 
-"""
 
-if mine_values[int(r)][int(col)] != "a" and "b" and "c" and "d" and "e" and "f" and "s":
-    print("Location Empty!")
-
-l = [["a", "got_wood"], ["b", "used_toolshed"], ["c", "used_workbench"],["d", "got_grass"],
-["e", "used_factory"], ["f", "got_iron"],["s","at_shelter"]]
-table = tabulate(l, headers=['Propositions', 'Events'], tablefmt='orgtbl')
-print(table)
-
-"""
