@@ -1,12 +1,11 @@
 import math
 import time,collections
-import random, os, argparse
+import random, os
 from sympy import *
 from enum import Enum
 from collections import deque
 from sympy.logic import simplify_logic
 from sympy.logic.boolalg import And, Or, Not
-
 start = time.time()
 
 class Entity:
@@ -76,9 +75,6 @@ def get_sequence_of_subtasks():
     #tasks.append(_get_sequence('acfc'))
     return tasks
 
-def get_option(goal):
-    return _get_sequence(goal)
-
 def _get_sequence(seq):
     if len(seq) == 1:
         return ('until','True',seq)
@@ -91,7 +87,6 @@ def get_dfa(ltl_formula):
     propositions = extract_propositions(ltl_formula)
     propositions.sort()
     truth_assignments = _get_truth_assignments(propositions)
-
     ltl2states = {'False':-1, ltl_formula: 0}
     edges = {}
 
@@ -252,23 +247,20 @@ def _get_formula(truth_assignments, propositions):
 
 class DFA:
     def __init__(self, ltl_formula):
-        # Progressing formula
         initial_state, accepting_states, ltl2state, edges = get_dfa(ltl_formula)
 
-        # setting the DFA
         self.formula   = ltl_formula
-        self.state     = initial_state    # initial state id
-        self.terminal  = accepting_states # list of terminal states
-        self.ltl2state = ltl2state        # dictionary from ltl to state
+        self.state     = initial_state    
+        self.terminal  = accepting_states 
+        self.ltl2state = ltl2state        
         self.state2ltl = dict([[v,k] for k,v in self.ltl2state.items()])
-        # Adding the edges
         self.nodelist = {}
         for v1, v2, label in edges:
             if v1 not in self.nodelist:
                 self.nodelist[v1] = {}
             self.nodelist[v1][v2] = label
 
-    def progress(self, true_props): #progress dfa
+    def progress(self, true_props): 
         self.state = self._get_next_state(self.state, true_props)
 
     def _get_next_state(self, v1, true_props):
@@ -277,7 +269,7 @@ class DFA:
                 return v2
         return -1
 
-    def progress_LTL(self, ltl_formula, true_props): #progress ltl given true_props
+    def progress_LTL(self, ltl_formula, true_props): 
         if ltl_formula not in self.ltl2state:
             raise NameError('ltl formula ' + ltl_formula + " is not part of this DFA")
         return self.get_LTL(self._get_next_state(self.ltl2state[ltl_formula], true_props))
@@ -298,7 +290,6 @@ class DFA:
             aux.extend([str((v1,v2,self.nodelist[v1][v2])) for v2 in self.nodelist[v1]])
         return "\n".join(aux)
 
-#Evaluates 'formula' assuming 'true_props' are the only true propositions and the rest are false. 
 def _evaluate_DNF(formula,true_props):
     if "|" in formula:
         for f in formula.split("|"):
@@ -332,35 +323,28 @@ def value_iteration(S, actions, T, V, discount=1, v_init=0, e=0.01):
 def get_value_action(s,a,T,V,discount=1):
     return sum([T[s][a].get_probability(s2) * (T[s][a].get_reward(s2) + discount * V[s2]) for s2 in T[s][a].get_next_states()])
 
-
-# saves all the information related to one transition in MDP
 class Transition:
     def __init__(self, s, a):
-        self.s = s     # State unique id
-        self.a = a     # Action
-        self.R = {}    # Sum of all the rewards received by this transition
-        self.T = {}    # Dictionary where the key is the next state and the value is the counting
+        self.s = s    
+        self.a = a    
+        self.R = {}   
+        self.T = {}   
 
-    # Updates the probability and reward
     def add_successor(self, s_next, prob, reward):
         self.T[s_next] = prob
         self.R[s_next] = reward
 
-    # Returns the next states
     def get_next_states(self):
         return self.T.keys()
 
-    # Returns the reward
     def get_reward(self, s_next):
         return float(self.R[s_next])
 
-    # Returns the probability of transinting to s_next
     def get_probability(self, s_next):
         return float(self.T[s_next])
 
 def evaluate_optimal_policy(map, agent_i, agent_j, consider_night, tasks, task_id):
     map_height, map_width = len(map), len(map)
-    sunrise, hour_init, sunset = 5, 12, 21
     actions = [Actions.up, Actions.down, Actions.left, Actions.right]
 
     summary = []
@@ -369,22 +353,12 @@ def evaluate_optimal_policy(map, agent_i, agent_j, consider_night, tasks, task_i
         S = set()
         for i in range(1,map_height-1):
             for j in range(1,map_width-1):
-                if consider_night:
-                    for t in range(24):
-                        # do not include states where is night and the agent is not in the shelter
-                        if not(sunrise <= t <= sunset) and str(map[i][j]) != "s":
-                            continue
-                        for ltl in dfa.ltl2state:
-                            if ltl not in ['True', 'False']:
-                                S.add((i,j,t,ltl))
-                else:
-                    for ltl in dfa.ltl2state:
+            	for ltl in dfa.ltl2state:
                         if ltl not in ['True', 'False']:
                             S.add((i,j,ltl))
-
+             
         S.add('False')
         S.add('True')
-        # Constructing transition and reward matrix
         T = {}
         for s in S:
             T[s] = {}
@@ -393,11 +367,7 @@ def evaluate_optimal_policy(map, agent_i, agent_j, consider_night, tasks, task_i
                 if s in ['False','True']:
                     T[s][a].add_successor(s, 1, 0)
                 else:
-                    if consider_night:
-                        i,j,t,ltl = s
-                    else:
-                        i,j,ltl = s
-                    # performing action
+                    i,j,ltl = s
                     s2_i, s2_j = i, j
                     if a == Actions.up:    s2_i-=1
                     if a == Actions.down:  s2_i+=1
@@ -405,34 +375,20 @@ def evaluate_optimal_policy(map, agent_i, agent_j, consider_night, tasks, task_i
                     if a == Actions.right: s2_j+=1
                     if str(map[s2_i][s2_j]) == "X":
                         s2_i, s2_j = i, j
-                    # Progressing time
-                    if consider_night:
-                        s2_t = (t+1)%24
-                    # Progressing the DFA
                     true_props = str(map[s2_i][s2_j]).strip()
-                    if consider_night and not(sunrise <= s2_t <= sunset):
-                        true_props += "n"
                     s2_ltl = dfa.progress_LTL(ltl, true_props)
-                    # Adding transition
                     if s2_ltl in ['False','True']:
                         s2 = s2_ltl
                     else:
-                        if consider_night:
-                            s2 = (s2_i,s2_j,s2_t,s2_ltl)
-                        else:
-                            s2 = (s2_i,s2_j,s2_ltl)
+                        s2 = (s2_i,s2_j,s2_ltl)
 
                     T[s][a].add_successor(s2, 1, -1 if s2 != 'False' else -1000)
                     if s2 not in S:
                         print("Error!")
 
-        # Computing the optimal policy with value iteration
         V = {}
         value_iteration(S, actions, T, V)
-        if consider_night:
-            s = (agent_i, agent_j, hour_init, dfa.get_LTL())
-        else:
-            s = (agent_i, agent_j, dfa.get_LTL())
+        s = (agent_i, agent_j, dfa.get_LTL())
 
         summary.append(int(-V[s]))
     print(summary)
@@ -466,16 +422,12 @@ def getMyopicSolution(agent, objs, task):
     min_cost = min([getMD(agent, pos) for pos in objs[task[0]]])
     return min([getMD(agent, pos) + getMyopicSolution(pos, objs, task[1:]) for pos in objs[task[0]] if getMD(agent, pos) == min_cost])
 
-# returns a list with all the possible path's cost --> minimum one has to be taken
-
 def getOptimalSolution(agent, objs, task):
     if task == "": return 0
     return min([getMD(agent, pos) + getOptimalSolution(pos, objs, task[1:]) for pos in objs[task[0]]])
 
 def computeOptimalSolutions(map, tasks):
-    # getting objects positions
     objs, agent = getObjects(map)
-    # computing optimal and myopic optimal solutions
     myopic_optimal = 0
     for t in tasks:
         optimal = getOptimalSolution(agent, objs, t)
@@ -484,20 +436,15 @@ def computeOptimalSolutions(map, tasks):
     return myopic_optimal/len(tasks)
 
 def createMap(conf_params, seed, show):
-    # configuration parameters
-    map_width, map_height, resources, workstations, shelter_locations, tasks, num_resource_per_type, num_workstations_per_type = conf_params
+    map_width, map_height, resources, workstations, shelter_locations, tasks, num_resource_per_type, num_workstations_per_type=conf_params
     random.seed(10)
-    # Creating map layout
     map = [["X"]+[" " for _ in range(map_width-2)]+["X"] for _ in range(map_height)]
     map[0] = ["X" for _ in range(map_width)]
     map[-1] = ["X" for _ in range(map_width)]
-    # Adding the agent in a corner
     map[map_height//2][map_width//2] = "A"
     agent_i, agent_j = map_height//2, map_width//2
-    # Adding the Shelter
     for i,j in shelter_locations:
         map[i][j] = "s"
-    # Adding the work stations and resources
     addElements(map, workstations, num_workstations_per_type)
     addElements(map, resources, num_resource_per_type)
 
@@ -519,7 +466,7 @@ if __name__ == '__main__':
     num_workstations_per_type = 2
     shelter_locations = [(i,j) for i in range(8,13) for j in range(11,20)]
     tasks = ["ab", "ac", "de", "db", "fae", "abdc"]
-    conf_params = map_width, map_height, resources, workstations, shelter_locations, tasks, num_resource_per_type, num_workstations_per_type
+    conf_params = map_width, map_height, resources, workstations, shelter_locations, tasks, num_resource_per_type,num_workstations_per_type
 
 #seed = input("Enter a seed value:" )
 seed = random.randint(0,5)

@@ -1,10 +1,8 @@
 import random
 import os
 from tabulate import tabulate
-
 import time
 start = time.time()
-
 
 def print_mines_layout():
     global mine_values
@@ -63,9 +61,9 @@ print_mines_layout()
 #print(mine_values)
 print()
 
-l = [["a", "got_wood"], ["b", "used_toolshed"], ["c", "used_workbench"],["d", "got_grass"],
-["e", "used_factory"], ["f", "got_iron"],["s","at_shelter"]]
-table = tabulate(l, headers=['Propositions', 'Events'], tablefmt='orgtbl')
+t = [["a", "got_wood"], ["b", "used_toolshed"], ["c", "used_workbench"],
+["d", "got_grass"],["e", "used_factory"], ["f", "got_iron"],["s","at_shelter"]]
+table = tabulate(t, headers=['Propositions', 'Events'], tablefmt='orgtbl')
 print(table)
 print()
 

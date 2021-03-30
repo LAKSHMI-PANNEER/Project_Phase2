@@ -30,17 +30,6 @@ def _get_sequence(seq):
         return ('until','True',seq)
     return ('until','True', ('and', seq[0], _get_sequence(seq[1:])))
 
-"""   
-This module contains functions to progress co-safe LTL formulas:
-    (
-        'and',
-        ('until','True', ('and', 'd', ('until','True','c'))),
-        ('until','True', ('and', 'a', ('until','True', ('and', 'b', ('until','True','c')))))
-    )
-'get_dfa' receives co-safe LTL formula and progresses it over all possible valuations of the propositions. 
-returns all possible progressions of the formula in the form of a DFA.
-"""
-
 def extract_propositions(ltl_formula):
     return list(set(_get_propositions(ltl_formula)))
 
@@ -48,8 +37,6 @@ def get_dfa(ltl_formula):
     propositions = extract_propositions(ltl_formula)
     propositions.sort()
     truth_assignments = _get_truth_assignments(propositions)
-
-    # Creating DFA using progression
     ltl2states = {'False':-1, ltl_formula: 0}
     edges = {}
 
@@ -59,12 +46,10 @@ def get_dfa(ltl_formula):
         if formula in ['True', 'False']:
             continue
         for truth_assignment in truth_assignments:
-            # progressing formula
             f_progressed = _progress(formula, truth_assignment)
             if f_progressed not in ltl2states:
                 new_node = len(ltl2states) - 1
                 ltl2states[f_progressed] = new_node
-            # adding edge
             edge = (ltl2states[formula],ltl2states[f_progressed])
             if edge not in edges:
                 edges[edge] = []
@@ -74,21 +59,19 @@ def get_dfa(ltl_formula):
                 visited.add(f_progressed) 
                 queue.append(f_progressed) 
 
-    # Adding initial and accepting states
     initial_state = 0
     accepting_states = [ltl2states['True']]
     edges_tuple = []
+
     for e in edges:
         f  = _get_formula(edges[e], propositions)
         edges_tuple.append((e[0],e[1],f))
-    # Adding self-loops for 'True' and 'False'
     edges_tuple.append((ltl2states['True'],ltl2states['True'], 'True'))
     edges_tuple.append((ltl2states['False'],ltl2states['False'], 'True'))
 
     return initial_state, accepting_states, ltl2states, edges_tuple
 
 def _get_truth_assignments(propositions):
-    # computing all possible value assignments for propositions
     truth_assignments = []
     for p in range(2**len(propositions)):
             truth_assignment = ""
@@ -110,11 +93,9 @@ def _get_propositions(ltl_formula):
     if ltl_formula[0] in ['not', 'next']:
         return _get_propositions(ltl_formula[1])
     
-    # 'and', 'or', 'until'
     return _get_propositions(ltl_formula[1]) + _get_propositions(ltl_formula[2])
     
 def _is_prop_formula(f):
-    # returns True if the formula does not contains temporal operators
     return 'next' not in str(f) and 'until' not in str(f)
 
 def _subsume_until(f1, f2):
@@ -138,9 +119,7 @@ def _subsume_until(f1, f2):
 
 def _progress(ltl_formula, truth_assignment):
     if type(ltl_formula) == str:
-        # True, False, or proposition
         if len(ltl_formula) == 1:
-            # ltl_formula is a proposition
             if ltl_formula in truth_assignment:
                 return 'True'
             else:
@@ -148,7 +127,6 @@ def _progress(ltl_formula, truth_assignment):
         return ltl_formula
     
     if ltl_formula[0] == 'not':
-        # negations should be over propositions only according to the cosafe ltl syntactic restriction
         result = _progress(ltl_formula[1], truth_assignment)
         if result == 'True':
             return 'False'
@@ -220,27 +198,16 @@ def _get_formula(truth_assignments, propositions):
 val = input("Enter the goal: ") 
 
 if val in ['ab','ac','de','db','fae','abdc']:
-
 	print('\nLTL Formula:', get_option(val))
-
 	ltl_formula = get_option(val)
-    
 	propositions = _get_propositions(ltl_formula)
-
 	print('\nPropositions:', propositions)
-
 	ta = _get_truth_assignments(propositions)
-
 	print('\nTruth assignments:', ta)
-
 	form = _progress(ltl_formula, ta)
-
 	print('\nProgress:', form)
-
 	dfa = get_dfa(ltl_formula)
-
 	print('\nDFA:', dfa)
-
 else:
 	print("Enter valid goal!")
 
