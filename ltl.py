@@ -198,7 +198,7 @@ def _get_formula(truth_assignments, propositions):
 val = input("Enter the goal: ") 
 
 if val in ['ab','ac','de','db','fae','abdc']:
-	print('\nLTL Formula:', get_option(val))
+	print('\nCo-safe LTL Formula:', get_option(val))
 	ltl_formula = get_option(val)
 	propositions = _get_propositions(ltl_formula)
 	print('\nPropositions:', propositions)
